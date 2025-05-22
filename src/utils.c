@@ -1,0 +1,84 @@
+#include <sys/wait.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <limits.h>
+
+#include "utils.h"
+
+const char *getenv_or(const char *name, const char *fallback) {
+    const char *env = getenv(name);
+    if (env == NULL) {
+        env = fallback;
+    }
+    return env;
+}
+
+int open_and_edit(const char *filename, const char *template) {
+    int fd = -1;
+
+    do {
+        fd = open(filename, O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR);
+    } while (fd < 0 && errno == EINTR);
+    if (fd < 0) {
+        ELOG("failed to open %s", filename);
+        goto err;
+    }
+
+    if (template != NULL) {
+        size_t template_len = strlen(template);
+        size_t written = 0;
+        while (written < template_len) {
+            ssize_t w = write(fd, template + written, template_len - written);
+            if (w < 0 && errno != EINTR) {
+                ELOG("failed to write template");
+                goto err;
+            }
+            written += w;
+        }
+    }
+
+    const char *editor = getenv_or("EDITOR", "nvim");
+    pid_t pid;
+    switch (pid = fork()) {
+    case -1: /* error */
+        ELOG("failed to fork child");
+        goto err;
+    case 0: /* child */
+        execlp(editor, editor, filename, NULL);
+        ELOG("failed to exec into %s", editor);
+        exit(1);
+    default: /* parent */
+        break;
+    }
+
+    while (waitpid(pid, NULL, 0) < 0) {
+        if (errno != EINTR) {
+            ELOG("failed to wait for child with pid %d", pid);
+            goto err;
+        }
+    };
+
+    return fd;
+
+err:
+    if (fd > 0) {
+        close(fd);
+    }
+    return -1;
+}
+
+const char *get_tmpfile_path(void) {
+    static int n = 0;
+    static char path[PATH_MAX];
+
+    const char *tmpdir = getenv_or("TMPDIR", "/tmp");
+
+    snprintf(path, sizeof(path), "%s/todo_tmpfile_%d_%d.txt", tmpdir, getpid(), n++);
+
+    return path;
+}
+

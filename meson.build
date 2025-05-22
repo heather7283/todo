@@ -7,7 +7,8 @@ project('todo', 'c',
 sqlite3_dep = dependency('sqlite3')
 
 todo_sources = [
-  'src/todo.c'
+  'src/todo.c',
+  'src/utils.c',
 ]
 
 executable('todo',

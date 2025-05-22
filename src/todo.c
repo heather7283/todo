@@ -1,12 +1,20 @@
-#include <stdio.h>
+#include <unistd.h>
 
-#define PROJECT_NAME "todo"
+#include "utils.h"
 
 int main(int argc, char **argv) {
-    if (argc != 1) {
-        printf("%s takes no arguments.\n", argv[0]);
-        return 1;
+    const char *tmpfile_path = get_tmpfile_path();
+
+    int fd = open_and_edit(tmpfile_path, "sussus amogus\n");
+    if (fd < 0) {
+        goto err;
     }
-    printf("This is project %s.\n", PROJECT_NAME);
+    unlink(tmpfile_path);
+
+    sleep(60);
+
     return 0;
+
+err:
+    return 1;
 }

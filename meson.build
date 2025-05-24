@@ -6,11 +6,15 @@ project('todo', 'c',
 
 sqlite3_dep = dependency('sqlite3')
 
-getopt_lib = static_library('getopt', ['thirdparty/getopt/getopt.c',
-                                       'thirdparty/getopt/getopt_long.c'])
+ccronexpr_lib = static_library('ccronexpr',
+                               'thirdparty/supertinycron/ccronexpr.c',
+                               c_args: ['-DCRON_USE_LOCAL_TIME'])
+getopt_lib = static_library('getopt',
+                            ['thirdparty/getopt/getopt.c', 'thirdparty/getopt/getopt_long.c'])
 
 include_dirs = [
   'src',
+  'thirdparty/supertinycron',
   'thirdparty/getopt',
 ]
 
@@ -24,7 +28,7 @@ todo_sources = [
 
 executable('todo', todo_sources,
            include_directories: include_dirs,
-           link_with: [getopt_lib],
+           link_with: [ccronexpr_lib, getopt_lib],
            dependencies: [sqlite3_dep],
            install: true)
 

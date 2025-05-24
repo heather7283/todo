@@ -4,6 +4,9 @@
 #define LOG(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
 #define ELOG(fmt, ...) fprintf(stderr, fmt ": %s\n", ##__VA_ARGS__, strerror(errno))
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+#define STREQ(a, b) (strcmp((a), (b)) == 0)
+
 /* Returns value of envvar name or fallback if envvar name is unset */
 const char *getenv_or(const char *name, const char *fallback);
 

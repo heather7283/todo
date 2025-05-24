@@ -1,0 +1,14 @@
+Implementation of getopt and getopt_long libc functions adapted from musl.
+
+getopt_long implementation was modified to stop processing arguments after the
+first non-option argument is encountered, as opposed to the GNU implementation,
+which permutes contents of argv and puts all non-option arguments at the end.
+
+References:
+https://git.musl-libc.org/cgit/musl/tree/include/getopt.h
+https://git.musl-libc.org/cgit/musl/tree/src/misc/getopt.c
+https://git.musl-libc.org/cgit/musl/tree/src/misc/getopt_long.c
+
+License:
+musl is licensed under the standard MIT license.
+

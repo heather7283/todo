@@ -6,13 +6,25 @@ project('todo', 'c',
 
 sqlite3_dep = dependency('sqlite3')
 
+getopt_lib = static_library('getopt', ['thirdparty/getopt/getopt.c',
+                                       'thirdparty/getopt/getopt_long.c'])
+
+include_dirs = [
+  'src',
+  'thirdparty/getopt',
+]
+
 todo_sources = [
   'src/todo.c',
   'src/utils.c',
+  'src/db.c',
+  'src/xmalloc.c',
+  'src/actions/add.c',
 ]
 
-executable('todo',
-           todo_sources,
+executable('todo', todo_sources,
+           include_directories: include_dirs,
+           link_with: [getopt_lib],
            dependencies: [sqlite3_dep],
            install: true)
 

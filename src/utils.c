@@ -82,3 +82,21 @@ const char *get_tmpfile_path(void) {
     return path;
 }
 
+bool str_to_int64(const char *str, int64_t *res) {
+    char *endptr = NULL;
+
+    errno = 0;
+    int64_t res_tmp = strtoll(str, &endptr, 10);
+
+    if (errno == 0 && *endptr == '\0') {
+        *res = res_tmp;
+        return true;
+    } else if (errno != 0) {
+        ELOG("failed to convert %s to int64", str);
+        return false;
+    } else {
+        LOG("failed to convert %s to int64: Invalid character %c", str, *endptr);
+        return false;
+    }
+}
+

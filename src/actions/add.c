@@ -88,6 +88,8 @@ static int add_periodic(int argc, char **argv) {
         goto err;
     }
 
+    sqlite3_finalize(sql_stmt);
+
     return 0;
 
 err:
@@ -147,6 +149,8 @@ static int add_deadline(int argc, char **argv) {
         goto err;
     }
 
+    sqlite3_finalize(sql_stmt);
+
     return 0;
 
 err:
@@ -196,6 +200,8 @@ static int add_idle(int argc, char **argv) {
         SQL_ELOG("failed to insert a new db entry");
         goto err;
     }
+
+    sqlite3_finalize(sql_stmt);
 
     return 0;
 

@@ -10,17 +10,12 @@
 #include "getopt.h"
 #include "ccronexpr.h"
 
-static void print_help_and_exit(FILE *stream, int rc) {
-    const char *help =
-        "Usage:\n"
-        "    todo add idle TITLE [BODY]\n"
-        "    todo add deadline DEADLINE TITLE [BODY]\n"
-        "    todo add periodic CRONEXPR TITLE [BODY]\n"
-    ;
-
-    fputs(help, stream);
-    exit(rc);
-}
+static const char *help =
+    "Usage:\n"
+    "    todo add idle TITLE [BODY]\n"
+    "    todo add deadline DEADLINE TITLE [BODY]\n"
+    "    todo add periodic CRONEXPR TITLE [BODY]\n"
+;
 
 static int add_periodic(int argc, char **argv) {
     int ret;
@@ -30,7 +25,7 @@ static int add_periodic(int argc, char **argv) {
 
     if (argc < 2) {
         LOG("not enough arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     } else if (argc == 2) {
         cron_expr_str = argv[0];
         title_str = argv[1];
@@ -40,7 +35,7 @@ static int add_periodic(int argc, char **argv) {
         body_str = argv[2];
     } else {
         LOG("too many arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     cron_expr cron_expr;
@@ -105,7 +100,7 @@ static int add_deadline(int argc, char **argv) {
 
     if (argc < 2) {
         LOG("not enough arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     } else if (argc == 2) {
         deadline_str = argv[0];
         title_str = argv[1];
@@ -115,7 +110,7 @@ static int add_deadline(int argc, char **argv) {
         body_str = argv[2];
     } else {
         LOG("too many arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     int64_t deadline;
@@ -165,7 +160,7 @@ static int add_idle(int argc, char **argv) {
 
     if (argc < 1) {
         LOG("not enough arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     } else if (argc == 1) {
         title_str = argv[0];
     } else if (argc == 2) {
@@ -173,7 +168,7 @@ static int add_idle(int argc, char **argv) {
         body_str = argv[1];
     } else {
         LOG("too many arguments\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     const char sql[] =
@@ -219,19 +214,19 @@ int action_add(int argc, char **argv) {
     while ((opt = getopt(argc, argv, ":h")) != -1) {
         switch (opt) {
         case 'h':
-            print_help_and_exit(stdout, 0);
+            print_help_and_exit(help, stdout, 0);
             break;
         case '?':
             LOG("unknown option: %c\n", optopt);
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         case ':':
             LOG("missing arg for %c\n", optopt);
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         default:
             LOG("error while parsing command line options\n");
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         }
     }
@@ -240,7 +235,7 @@ int action_add(int argc, char **argv) {
 
     if (argc < 1) {
         LOG("item type is not specified\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     if (STREQ(argv[0], "idle")) {
@@ -251,7 +246,7 @@ int action_add(int argc, char **argv) {
         rc = add_periodic(argc - 1, argv + 1);
     } else {
         LOG("invalid item type: %s\n", argv[0]);
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     return rc;

@@ -19,15 +19,13 @@ static const struct {
     {"add", action_add},
 };
 
-static void print_help_and_exit(FILE *stream, int rc) {
-    const char help[] =
-        "usage:\n"
-        "    todo [-d DB_PATH] [-h]\n"
-    ;
-
-    fputs(help, stream);
-    exit(rc);
-}
+static const char help[] =
+    "Usage:\n"
+    "    todo [-d DB_PATH] [-h] ACTION ARGS...\n"
+    "\n"
+    "Actions:\n"
+    "    todo add - create a todo item\n"
+;
 
 int main(int argc, char **argv) {
     int rc = 0;
@@ -40,19 +38,19 @@ int main(int argc, char **argv) {
             db_path = optarg;
             break;
         case 'h':
-            print_help_and_exit(stdout, 0);
+            print_help_and_exit(help, stdout, 0);
             break;
         case '?':
             LOG("unknown option: %c\n", optopt);
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         case ':':
             LOG("missing arg for %c\n", optopt);
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         default:
             LOG("error while parsing command line options\n");
-            print_help_and_exit(stderr, 1);
+            print_help_and_exit(help, stderr, 1);
             break;
         }
     }
@@ -60,7 +58,7 @@ int main(int argc, char **argv) {
     argv = &argv[optind];
     if (argc < 1) {
         LOG("no action provided\n");
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     action_func_t action = NULL;
@@ -71,7 +69,7 @@ int main(int argc, char **argv) {
     }
     if (action == NULL) {
         LOG("unknown action: %s", argv[0]);
-        print_help_and_exit(stderr, 1);
+        print_help_and_exit(help, stderr, 1);
     }
 
     if (db_init(db_path) < 0) {

@@ -100,3 +100,8 @@ bool str_to_int64(const char *str, int64_t *res) {
     }
 }
 
+void print_help_and_exit(const char *help, FILE *stream, int rc) {
+    fputs(help, stream);
+    exit(rc);
+}
+

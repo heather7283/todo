@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define LOG(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
 #define ELOG(fmt, ...) fprintf(stderr, fmt ": %s\n", ##__VA_ARGS__, strerror(errno))
@@ -21,6 +22,9 @@ const char *get_tmpfile_path(void);
 
 /* Convert string to int while without all the strtol() bullshit */
 bool str_to_int64(const char *str, int64_t *res);
+
+/* Print message help to stream and exit with code rc */
+void print_help_and_exit(const char *help, FILE *stream, int rc);
 
 #endif /* #ifndef SRC_UTILS_H */
 

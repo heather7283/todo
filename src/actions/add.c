@@ -10,7 +10,7 @@
 #include "getopt.h"
 #include "ccronexpr.h"
 
-static const char *help =
+static const char help[] =
     "Usage:\n"
     "    todo add idle TITLE [BODY]\n"
     "    todo add deadline DEADLINE TITLE [BODY]\n"

@@ -101,18 +101,3 @@ void db_cleanup(void) {
     db = NULL;
 }
 
-void todo_item_free(struct todo_item *item) {
-    switch (item->type) {
-    case IDLE:
-        break;
-    case DEADLINE:
-        break;
-    case PERIODIC:
-        free(item->as.periodic.cron_expr);
-        break;
-    }
-
-    free(item->title);
-    free(item->body);
-}
-

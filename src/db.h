@@ -35,8 +35,6 @@ struct todo_item {
     } as;
 };
 
-void todo_item_free(struct todo_item *item);
-
 extern struct sqlite3 *db;
 
 int db_init(const char *db_path);

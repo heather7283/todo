@@ -26,6 +26,7 @@ todo_sources = [
   'src/actions/add.c',
   'src/actions/check.c',
   'src/actions/dismiss.c',
+  'src/actions/delete.c',
 ]
 
 executable('todo', todo_sources,

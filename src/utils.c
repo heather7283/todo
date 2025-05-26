@@ -125,6 +125,10 @@ const char *format_timediff(time_t diff) {
     int h = (diff % 86400) / 3600;
     int m = (diff % 3600) / 60;
 
+    if (d == 0 && h == 0 && m == 0) {
+        return "<1m";
+    }
+
     if (d != 0) {
         s += snprintf(s, sizeof(string) - (s - string), "%id ", d);
     }

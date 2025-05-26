@@ -70,7 +70,7 @@ static int add_periodic(int argc, char **argv) {
     STMT_BIND(sql_stmt, text, "$title", title_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, text, "$body", body_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, int64, "$created_at", created_at);
-    STMT_BIND(sql_stmt, text, "$type", "periodic", -1, SQLITE_STATIC);
+    STMT_BIND(sql_stmt, int64, "$type", PERIODIC);
     STMT_BIND(sql_stmt, text, "$cron_expr", cron_expr_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, int64, "$prev_trigger", 0);
     STMT_BIND(sql_stmt, int64, "$next_trigger", next_trigger);
@@ -134,7 +134,7 @@ static int add_deadline(int argc, char **argv) {
     STMT_BIND(sql_stmt, text, "$title", title_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, text, "$body", body_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, int64, "$created_at", created_at);
-    STMT_BIND(sql_stmt, text, "$type", "deadline", -1, SQLITE_STATIC);
+    STMT_BIND(sql_stmt, int64, "$type", DEADLINE);
     STMT_BIND(sql_stmt, int64, "$deadline", deadline);
 
     ret = sqlite3_step(sql_stmt);
@@ -187,7 +187,7 @@ static int add_idle(int argc, char **argv) {
     STMT_BIND(sql_stmt, text, "$title", title_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, text, "$body", body_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, int64, "$created_at", created_at);
-    STMT_BIND(sql_stmt, text, "$type", "idle", -1, SQLITE_STATIC);
+    STMT_BIND(sql_stmt, int64, "$type", IDLE);
 
     ret = sqlite3_step(sql_stmt);
     if (ret != SQLITE_DONE) {

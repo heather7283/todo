@@ -12,6 +12,7 @@
 
 struct sqlite3 *db = NULL;
 
+/* MAKE SURE ENUM VALUES ARE CORRECT!!! */
 static const char create_table_todo_items_stmt[] =
     "CREATE TABLE IF NOT EXISTS todo_items ("
         "id           INTEGER PRIMARY KEY,"
@@ -19,14 +20,14 @@ static const char create_table_todo_items_stmt[] =
         "body         TEXT,"
         "created_at   INTEGER NOT NULL,"
         "completed_at INTEGER,"
-        "type         TEXT    CHECK(type == 'deadline' OR type == 'idle' OR type == 'periodic'),"
+        "type         INTEGER CHECK(type == 1 OR type == 2 OR type == 3),"
         /* only for deadline type */
-        "deadline     INTEGER CHECK((deadline IS NOT NULL) == (type == 'deadline')),"
+        "deadline     INTEGER CHECK((deadline IS NOT NULL) == (type == 2)),"
         /* only for periodic type */
-        "cron_expr    TEXT    CHECK((cron_expr IS NOT NULL) == (type == 'periodic')),"
-        "prev_trigger INTEGER CHECK((prev_trigger IS NOT NULL) == (type == 'periodic')),"
-        "next_trigger INTEGER CHECK((next_trigger IS NOT NULL) == (type == 'periodic')),"
-        "dismissed    INTEGER CHECK((dismissed IS NOT NULL) == (type == 'periodic'))"
+        "cron_expr    TEXT    CHECK((cron_expr IS NOT NULL) == (type == 3)),"
+        "prev_trigger INTEGER CHECK((prev_trigger IS NOT NULL) == (type == 3)),"
+        "next_trigger INTEGER CHECK((next_trigger IS NOT NULL) == (type == 3)),"
+        "dismissed    INTEGER CHECK((dismissed IS NOT NULL) == (type == 3))"
     ")";
 
 static const char *get_default_db_path(void) {

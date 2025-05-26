@@ -132,21 +132,32 @@ int action_check(int argc, char **argv) {
     while ((ret = sqlite3_step(sql_stmt)) == SQLITE_ROW) {
         int64_t id = sqlite3_column_int64(sql_stmt, 0);
         const char *title = (char *)sqlite3_column_text(sql_stmt, 1);
-        const char *type = (char *)sqlite3_column_text(sql_stmt, 2);
+        enum todo_item_type type = sqlite3_column_int64(sql_stmt, 2);
 
-        if (STREQ(type, "idle")) {
+        switch (type) {
+        case IDLE: {
             check_idle(id, title);
-        } else if (STREQ(type, "deadline")) {
+            break;
+        }
+        case DEADLINE: {
             time_t deadline = sqlite3_column_int64(sql_stmt, 3);
 
             check_deadline(id, title, deadline);
-        } else if (STREQ(type, "periodic")) {
+            break;
+        }
+        case PERIODIC: {
             const char *cron_expr = (char *)sqlite3_column_text(sql_stmt, 4);
             time_t prev_trigger = sqlite3_column_int64(sql_stmt, 5);
             time_t next_trigger = sqlite3_column_int64(sql_stmt, 6);
             bool dismissed = sqlite3_column_int64(sql_stmt, 7);
 
             check_periodic(id, title, cron_expr, prev_trigger, next_trigger, dismissed);
+            break;
+        }
+        default: {
+            LOG("got invalid item type from db??? wtf");
+            goto err;
+        }
         }
     }
     if (ret != SQLITE_DONE) {

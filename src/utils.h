@@ -12,6 +12,9 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define STREQ(a, b) (strcmp((a), (b)) == 0)
 
+#define STR(s) #s
+#define STR2(s) STR(s)
+
 #define ANSI_DIM "\033[2m"
 #define ANSI_BOLD "\033[1m"
 #define ANSI_RED "\033[31m"

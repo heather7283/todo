@@ -37,6 +37,10 @@ int action_dismiss(int argc, char **argv) {
         SQL_ELOG("failed to update db entry");
         return 1;
     }
+    if (sqlite3_changes(db) < 1) {
+        LOG("periodic entry with id %li does not exist", id);
+        return 1;
+    }
 
     sqlite3_finalize(sql_stmt);
 

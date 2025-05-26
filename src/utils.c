@@ -105,3 +105,12 @@ void print_help_and_exit(const char *help, FILE *stream, int rc) {
     exit(rc);
 }
 
+const char *format_seconds(time_t seconds) {
+    static char string[64];
+
+    const struct tm *tm = localtime(&seconds);
+    strftime(string, sizeof(string), "%a %d %b %Y %H:%M:%S", tm);
+
+    return string;
+}
+

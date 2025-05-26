@@ -24,6 +24,7 @@ todo_sources = [
   'src/db.c',
   'src/xmalloc.c',
   'src/actions/add.c',
+  'src/actions/check.c',
 ]
 
 executable('todo', todo_sources,

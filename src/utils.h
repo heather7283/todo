@@ -4,12 +4,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 #define LOG(fmt, ...) fprintf(stderr, fmt "\n", ##__VA_ARGS__)
 #define ELOG(fmt, ...) fprintf(stderr, fmt ": %s\n", ##__VA_ARGS__, strerror(errno))
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define STREQ(a, b) (strcmp((a), (b)) == 0)
+
+#define ANSI_DIM "\033[2m"
+#define ANSI_BOLD "\033[1m"
+#define ANSI_RED "\033[31m"
+#define ANSI_GREEN "\033[32m"
+#define ANSI_YELLOW "\033[33m"
+#define ANSI_RESET "\033[0m"
 
 /* Returns value of envvar name or fallback if envvar name is unset */
 const char *getenv_or(const char *name, const char *fallback);
@@ -25,6 +33,9 @@ bool str_to_int64(const char *str, int64_t *res);
 
 /* Print message help to stream and exit with code rc */
 void print_help_and_exit(const char *help, FILE *stream, int rc);
+
+/* Formats unix seconds into human readable time string */
+const char *format_seconds(time_t seconds);
 
 #endif /* #ifndef SRC_UTILS_H */
 

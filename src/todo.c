@@ -9,6 +9,7 @@
 #include "getopt.h"
 
 #include "actions/add.h"
+#include "actions/check.h"
 
 typedef int (*action_func_t)(int argc, char **argv);
 
@@ -17,6 +18,7 @@ static const struct {
     const action_func_t action;
 } actions[] = {
     {"add", action_add},
+    {"check", action_check},
 };
 
 static const char help[] =
@@ -68,7 +70,7 @@ int main(int argc, char **argv) {
         }
     }
     if (action == NULL) {
-        LOG("unknown action: %s", argv[0]);
+        LOG("unknown action: %s\n", argv[0]);
         print_help_and_exit(help, stderr, 1);
     }
 

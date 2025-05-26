@@ -2,20 +2,14 @@
 #include <string.h>
 #include <time.h>
 
-#include "actions/add.h"
+#include "actions/check.h"
 #include "db.h"
 #include "utils.h"
 #include "xmalloc.h"
-#include "getopt.h"
 #include "ccronexpr.h"
 
 #define DEADLINE_THRESH_YELLOW (60 * 60 * 24 * 30) /* a month */
 #define DEADLINE_THRESH_RED (60 * 60 * 24 * 7) /* a week */
-
-static const char help[] =
-    "Usage:\n"
-    "    todo check takes no command line arguments\n"
-;
 
 static int check_idle(int id, const char *title) {
     printf(ANSI_DIM "%4i: \"%s\"" ANSI_RESET "\n", id, title);

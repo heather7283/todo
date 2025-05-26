@@ -1,9 +1,11 @@
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #include "actions/add.h"
 #include "db.h"
 #include "utils.h"
+#include "xmalloc.h"
 #include "getopt.h"
 #include "ccronexpr.h"
 
@@ -114,14 +116,51 @@ static int check_periodic(int id, const char *title, const char *cron_expression
     return 0;
 }
 
+static int compare_items(const void *a, const void *b) {
+    const struct todo_item *first = a;
+    const struct todo_item *second = b;
+
+    if (first->type != second->type) {
+        return first->type > second->type;
+    }
+
+    switch (first->type) {
+    case IDLE:
+        return first->created_at > second->created_at;
+    case DEADLINE:
+        return first->as.deadline.deadline < second->as.deadline.deadline;
+    case PERIODIC:
+        return first->as.periodic.next_trigger < second->as.periodic.next_trigger;
+    }
+}
+
 int action_check(int argc, char **argv) {
     int ret;
+    sqlite3_stmt *sql_stmt = NULL, *sql_count_stmt = NULL;
+    int64_t items_count;
+
+    /* TODO: remove the count query and use linked list for this (or sort on sql side) */
+    const char sql_count[] = "SELECT COUNT(*) FROM todo_items";
+
+    ret = sqlite3_prepare_v2(db, sql_count, -1, &sql_count_stmt, NULL);
+    if (ret != SQLITE_OK) {
+        SQL_ELOG("failed to prepare sql statement");
+        goto err;
+    }
+
+    if ((ret = sqlite3_step(sql_count_stmt)) == SQLITE_ROW) {
+        items_count = sqlite3_column_int64(sql_count_stmt, 0);
+    } else {
+        SQL_ELOG("failed to query entry count");
+        goto err;
+    }
+
+    struct todo_item *items = xmalloc(sizeof(*items) * items_count);
 
     const char sql[] =
-        /*       0     1    2        3         4            5            6         7 */
-        "SELECT id,title,type,deadline,cron_expr,prev_trigger,next_trigger,dismissed "
+        /*       0     1          2    3        4         5            6            7         8 */
+        "SELECT id,title,created_at,type,deadline,cron_expr,prev_trigger,next_trigger,dismissed "
         "FROM todo_items;";
-    sqlite3_stmt *sql_stmt = NULL;
 
     ret = sqlite3_prepare_v2(db, sql, -1, &sql_stmt, NULL);
     if (ret != SQLITE_OK) {
@@ -129,29 +168,58 @@ int action_check(int argc, char **argv) {
         goto err;
     }
 
+    int i = 0;
     while ((ret = sqlite3_step(sql_stmt)) == SQLITE_ROW) {
-        int64_t id = sqlite3_column_int64(sql_stmt, 0);
-        const char *title = (char *)sqlite3_column_text(sql_stmt, 1);
-        enum todo_item_type type = sqlite3_column_int64(sql_stmt, 2);
+        items[i].id = sqlite3_column_int64(sql_stmt, 0);
+        items[i].title = xstrdup((char *)sqlite3_column_text(sql_stmt, 1));
+        items[i].created_at = sqlite3_column_int64(sql_stmt, 2);
+        items[i].type = sqlite3_column_int64(sql_stmt, 3);
 
-        switch (type) {
+        switch (items[i].type) {
         case IDLE: {
-            check_idle(id, title);
             break;
         }
         case DEADLINE: {
-            time_t deadline = sqlite3_column_int64(sql_stmt, 3);
-
-            check_deadline(id, title, deadline);
+            items[i].as.deadline.deadline = sqlite3_column_int64(sql_stmt, 4);
             break;
         }
         case PERIODIC: {
-            const char *cron_expr = (char *)sqlite3_column_text(sql_stmt, 4);
-            time_t prev_trigger = sqlite3_column_int64(sql_stmt, 5);
-            time_t next_trigger = sqlite3_column_int64(sql_stmt, 6);
-            bool dismissed = sqlite3_column_int64(sql_stmt, 7);
+            items[i].as.periodic.cron_expr = xstrdup((char *)sqlite3_column_text(sql_stmt, 5));
+            items[i].as.periodic.prev_trigger = sqlite3_column_int64(sql_stmt, 6);
+            items[i].as.periodic.next_trigger = sqlite3_column_int64(sql_stmt, 7);
+            items[i].as.periodic.dismissed = sqlite3_column_int64(sql_stmt, 8);
+            break;
+        }
+        default: {
+            LOG("got invalid item type from db??? wtf");
+            goto err;
+        }
+        }
 
-            check_periodic(id, title, cron_expr, prev_trigger, next_trigger, dismissed);
+        i += 1;
+    }
+    if (ret != SQLITE_DONE) {
+        SQL_ELOG("failed to list entries");
+        goto err;
+    }
+
+    qsort(items, items_count, sizeof(items[0]), compare_items);
+
+    for (int i = 0; i < items_count; i++) {
+        switch (items[i].type) {
+        case IDLE: {
+            check_idle(items[i].id, items[i].title);
+            break;
+        }
+        case DEADLINE: {
+            check_deadline(items[i].id, items[i].title, items[i].as.deadline.deadline);
+            break;
+        }
+        case PERIODIC: {
+            /* TODO: refactor this to take struct itself as argument */
+            check_periodic(items[i].id, items[i].title, items[i].as.periodic.cron_expr,
+                           items[i].as.periodic.prev_trigger, items[i].as.periodic.next_trigger,
+                           items[i].as.periodic.dismissed);
             break;
         }
         default: {
@@ -160,14 +228,12 @@ int action_check(int argc, char **argv) {
         }
         }
     }
-    if (ret != SQLITE_DONE) {
-        SQL_ELOG("failed to list entrie");
-        goto err;
-    }
 
+    /* TODO: free the items */
     return 0;
 
 err:
+    sqlite3_finalize(sql_count_stmt);
     sqlite3_finalize(sql_stmt);
     return 1;
 }

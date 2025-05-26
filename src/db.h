@@ -1,6 +1,9 @@
 #ifndef SRC_DB_H
 #define SRC_DB_H
 
+#include <stdint.h>
+#include <stdbool.h>
+#include <time.h>
 #include <sqlite3.h>
 
 #define SQL_ELOG(fmt, ...) fprintf(stderr, fmt ": %s\n", ##__VA_ARGS__, sqlite3_errmsg(db))
@@ -12,6 +15,24 @@ enum todo_item_type {
     IDLE = 1,
     DEADLINE = 2,
     PERIODIC = 3,
+};
+
+struct todo_item {
+    int64_t id;
+    const char *title;
+    const char *body;
+    time_t created_at;
+    enum todo_item_type type;
+    union {
+        struct {
+            time_t deadline;
+        } deadline;
+        struct {
+            const char *cron_expr;
+            time_t prev_trigger, next_trigger;
+            bool dismissed;
+        } periodic;
+    } as;
 };
 
 extern struct sqlite3 *db;

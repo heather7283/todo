@@ -114,3 +114,27 @@ const char *format_seconds(time_t seconds) {
     return string;
 }
 
+const char *format_timediff(time_t diff) {
+    static char string[64];
+    char *s = string;
+
+    if (diff < 0) {
+        diff = -diff;
+    }
+    int d = (diff / 86400);
+    int h = (diff % 86400) / 3600;
+    int m = (diff % 3600) / 60;
+
+    if (d != 0) {
+        s += snprintf(s, sizeof(string) - (s - string), "%id ", d);
+    }
+    if (h != 0) {
+        s += snprintf(s, sizeof(string) - (s - string), "%ih ", h);
+    }
+    if (m != 0) {
+        s += snprintf(s, sizeof(string) - (s - string), "%im", m);
+    }
+
+    return string;
+}
+

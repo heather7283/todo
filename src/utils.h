@@ -37,5 +37,8 @@ void print_help_and_exit(const char *help, FILE *stream, int rc);
 /* Formats unix seconds into human readable time string */
 const char *format_seconds(time_t seconds);
 
+/* Formats number of seconds into days, hours, minutes */
+const char *format_timediff(time_t diff);
+
 #endif /* #ifndef SRC_UTILS_H */
 

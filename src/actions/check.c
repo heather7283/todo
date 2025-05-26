@@ -34,22 +34,22 @@ static int check_deadline(int id, const char *title, time_t deadline) {
         diff = -diff;
     }
 
-    int hours = (diff / 3600);
+    int days = (diff / 86400);
+    int hours = (diff % 86400) / 3600;
     int minutes = (diff % 3600) / 60;
-    int seconds = diff % 60;
 
     if (passed) {
-        printf(ANSI_BOLD ANSI_RED "%4i: \"%s\" due %s (%dh %dm %ds ago)" ANSI_RESET "\n",
-               id, title, date_str, hours, minutes, seconds);
+        printf(ANSI_BOLD ANSI_RED "%4i: \"%s\" due %s (%dd %dh %dm ago)" ANSI_RESET "\n",
+               id, title, date_str, days, hours, minutes);
     } else if (diff < DEADLINE_THRESH_RED) {
-        printf(ANSI_RED "%4i: \"%s\" due %s (in %dh %dm %ds)" ANSI_RESET "\n",
-               id, title, date_str, hours, minutes, seconds);
+        printf(ANSI_RED "%4i: \"%s\" due %s (in %dd %dh %dm)" ANSI_RESET "\n",
+               id, title, date_str, days, hours, minutes);
     } else if (diff < DEADLINE_THRESH_YELLOW) {
-        printf(ANSI_YELLOW "%4i: \"%s\" due %s (in %dh %dm %ds)" ANSI_RESET "\n",
-               id, title, date_str, hours, minutes, seconds);
+        printf(ANSI_YELLOW "%4i: \"%s\" due %s (in %dd %dh %dm)" ANSI_RESET "\n",
+               id, title, date_str, days, hours, minutes);
     } else {
-        printf(ANSI_GREEN "%4i: \"%s\" due %s (in %dh %dm %ds)" ANSI_RESET "\n",
-               id, title, date_str, hours, minutes, seconds);
+        printf(ANSI_GREEN "%4i: \"%s\" due %s (in %dd %dh %dm)" ANSI_RESET "\n",
+               id, title, date_str, days, hours, minutes);
     }
 
     return 0;
@@ -112,16 +112,16 @@ static int check_periodic(int id, const char *title, const char *cron_expression
         time_t now = time(NULL); /* TODO: call time() once */
         time_t diff = next_trigger - now;
 
-        int hours = (diff / 3600);
+        int days = (diff / 86400);
+        int hours = (diff % 86400) / 3600;
         int minutes = (diff % 3600) / 60;
-        int seconds = diff % 60;
 
         char next_str[64];
         struct tm *next_tm = localtime(&next_trigger);
         strftime(next_str, sizeof(next_str), "%a %d %b %Y %H:%M:%S", next_tm);
 
-        printf("%4i: \"%s\" %s (next %s, in %ih %im %is)\n",
-               id, title, cron_expression, next_str, hours, minutes, seconds);
+        printf("%4i: \"%s\" %s (next %s, in %id %ih %im)\n",
+               id, title, cron_expression, next_str, days, hours, minutes);
     }
 
     return 0;

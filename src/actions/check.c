@@ -11,13 +11,20 @@
 #define DEADLINE_THRESH_YELLOW (60 * 60 * 24 * 30) /* a month */
 #define DEADLINE_THRESH_RED (60 * 60 * 24 * 7) /* a week */
 
-static int check_idle(int id, const char *title) {
-    printf(ANSI_DIM "%4i: \"%s\"" ANSI_RESET "\n", id, title);
+static int check_idle(const struct todo_item *item) {
+    int64_t id = item->id;
+    const char *title = item->title;
+
+    printf(ANSI_DIM "%4li: \"%s\"" ANSI_RESET "\n", id, title);
 
     return 0;
 }
 
-static int check_deadline(int id, const char *title, time_t deadline) {
+static int check_deadline(const struct todo_item *item) {
+    int64_t id = item->id;
+    const char *title = item->title;
+    time_t deadline = item->as.deadline.deadline;
+
     time_t now = time(NULL); /* TODO: call time() once */
     time_t diff = deadline - now;
 
@@ -26,30 +33,36 @@ static int check_deadline(int id, const char *title, time_t deadline) {
     strftime(date_str, sizeof(date_str), "%a %d %b %Y %H:%M:%S", deadline_tm);
 
     if (diff < 0) { /* deadline has passed, I'm cooked */
-        printf(ANSI_BOLD ANSI_RED "%4i: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
+        printf(ANSI_BOLD ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     } else if (diff < DEADLINE_THRESH_RED) {
-        printf(ANSI_RED "%4i: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+        printf(ANSI_RED "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     } else if (diff < DEADLINE_THRESH_YELLOW) {
-        printf(ANSI_YELLOW "%4i: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+        printf(ANSI_YELLOW "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     } else {
-        printf(ANSI_GREEN "%4i: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+        printf(ANSI_GREEN "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     }
 
     return 0;
 }
 
-static int check_periodic(int id, const char *title, const char *cron_expression,
-                          time_t prev_trigger, time_t next_trigger, bool dismissed) {
+static int check_periodic(const struct todo_item *item) {
     /* Ok this one is tricky.
      *
      * If current time is greater than next_trigger, I should display the entry,
      * set it dismissed flag to false, set prev_trigger to current time,
      * and finally update next_trigger using the cron expression.
      */
+    int64_t id = item->id;
+    const char *title = item->title;
+    const char *cron_expression = item->as.periodic.cron_expr;
+    bool dismissed = item->as.periodic.dismissed;
+    time_t prev_trigger = item->as.periodic.prev_trigger;
+    time_t next_trigger = item->as.periodic.next_trigger;
+
     time_t now = time(NULL);
 
     if (now > next_trigger) {
@@ -87,7 +100,7 @@ static int check_periodic(int id, const char *title, const char *cron_expression
 
         ret = sqlite3_step(sql_stmt);
         if (ret != SQLITE_DONE) {
-            SQL_ELOG("failed to update db entry %i", id);
+            SQL_ELOG("failed to update db entry %li", id);
             /* TODO: handle error */
             return 1;
         }
@@ -103,7 +116,7 @@ static int check_periodic(int id, const char *title, const char *cron_expression
         struct tm *next_tm = localtime(&next_trigger);
         strftime(next_str, sizeof(next_str), "%a %d %b %Y %H:%M:%S", next_tm);
 
-        printf("%4i: \"%s\" %s (next %s, in %s)\n",
+        printf("%4li: \"%s\" %s (next %s, in %s)\n",
                id, title, cron_expression, next_str, format_timediff(diff));
     }
 
@@ -203,18 +216,15 @@ int action_check(int argc, char **argv) {
     for (int i = 0; i < items_count; i++) {
         switch (items[i].type) {
         case IDLE: {
-            check_idle(items[i].id, items[i].title);
+            check_idle(&items[i]);
             break;
         }
         case DEADLINE: {
-            check_deadline(items[i].id, items[i].title, items[i].as.deadline.deadline);
+            check_deadline(&items[i]);
             break;
         }
         case PERIODIC: {
-            /* TODO: refactor this to take struct itself as argument */
-            check_periodic(items[i].id, items[i].title, items[i].as.periodic.cron_expr,
-                           items[i].as.periodic.prev_trigger, items[i].as.periodic.next_trigger,
-                           items[i].as.periodic.dismissed);
+            check_periodic(&items[i]);
             free(items[i].as.periodic.cron_expr);
             break;
         }

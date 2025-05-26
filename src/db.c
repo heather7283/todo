@@ -26,7 +26,6 @@ static const char create_table_todo_items_stmt[] =
         "cron_expr    TEXT    CHECK((cron_expr IS NOT NULL) == (type == 'periodic')),"
         "prev_trigger INTEGER CHECK((prev_trigger IS NOT NULL) == (type == 'periodic')),"
         "next_trigger INTEGER CHECK((next_trigger IS NOT NULL) == (type == 'periodic')),"
-        "iteration    INTEGER CHECK((iteration IS NOT NULL) == (type == 'periodic')),"
         "dismissed    INTEGER CHECK((dismissed IS NOT NULL) == (type == 'periodic'))"
     ")";
 

@@ -55,9 +55,9 @@ static int add_periodic(int argc, char **argv) {
 
     const char sql[] =
         "INSERT INTO todo_items (title, body, created_at, type,"
-                                "cron_expr, prev_trigger, next_trigger, iteration, dismissed)"
+                                "cron_expr, prev_trigger, next_trigger, dismissed)"
         "VALUES ($title, $body, $created_at, $type,"
-                "$cron_expr, $prev_trigger, $next_trigger, $iteration, $dismissed);"
+                "$cron_expr, $prev_trigger, $next_trigger, $dismissed);"
     ;
     sqlite3_stmt *sql_stmt = NULL;
 
@@ -74,7 +74,6 @@ static int add_periodic(int argc, char **argv) {
     STMT_BIND(sql_stmt, text, "$cron_expr", cron_expr_str, -1, SQLITE_STATIC);
     STMT_BIND(sql_stmt, int64, "$prev_trigger", 0);
     STMT_BIND(sql_stmt, int64, "$next_trigger", next_trigger);
-    STMT_BIND(sql_stmt, int64, "$iteration", 0);
     STMT_BIND(sql_stmt, int64, "$dismissed", 0);
 
     ret = sqlite3_step(sql_stmt);

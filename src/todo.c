@@ -27,6 +27,7 @@ static const char help[] =
     "\n"
     "Actions:\n"
     "    todo add - create a todo item\n"
+    "    todo check - list brief summary of all todo items\n"
 ;
 
 int main(int argc, char **argv) {

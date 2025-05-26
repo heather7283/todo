@@ -138,6 +138,7 @@ int action_check(int argc, char **argv) {
     int ret;
     sqlite3_stmt *sql_stmt = NULL, *sql_count_stmt = NULL;
     int64_t items_count;
+    struct todo_item *items = NULL;
 
     /* TODO: remove the count query and use linked list for this (or sort on sql side) */
     const char sql_count[] = "SELECT COUNT(*) FROM todo_items";
@@ -155,7 +156,7 @@ int action_check(int argc, char **argv) {
         goto err;
     }
 
-    struct todo_item *items = xmalloc(sizeof(*items) * items_count);
+    items = xcalloc(items_count, sizeof(*items));
 
     const char sql[] =
         /*       0     1          2    3        4         5            6            7         8 */
@@ -220,6 +221,7 @@ int action_check(int argc, char **argv) {
             check_periodic(items[i].id, items[i].title, items[i].as.periodic.cron_expr,
                            items[i].as.periodic.prev_trigger, items[i].as.periodic.next_trigger,
                            items[i].as.periodic.dismissed);
+            free(items[i].as.periodic.cron_expr);
             break;
         }
         default: {
@@ -227,14 +229,17 @@ int action_check(int argc, char **argv) {
             goto err;
         }
         }
+
+        free(items[i].title);
+        free(items[i].body);
     }
 
-    /* TODO: free the items */
+    free(items);
+    sqlite3_finalize(sql_count_stmt);
+    sqlite3_finalize(sql_stmt);
     return 0;
 
 err:
-    sqlite3_finalize(sql_count_stmt);
-    sqlite3_finalize(sql_stmt);
     return 1;
 }
 

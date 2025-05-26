@@ -19,8 +19,8 @@ enum todo_item_type {
 
 struct todo_item {
     int64_t id;
-    const char *title;
-    const char *body;
+    char *title;
+    char *body;
     time_t created_at;
     enum todo_item_type type;
     union {
@@ -28,12 +28,14 @@ struct todo_item {
             time_t deadline;
         } deadline;
         struct {
-            const char *cron_expr;
+            char *cron_expr;
             time_t prev_trigger, next_trigger;
             bool dismissed;
         } periodic;
     } as;
 };
+
+void todo_item_free(struct todo_item *item);
 
 extern struct sqlite3 *db;
 

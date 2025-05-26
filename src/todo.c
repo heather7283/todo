@@ -10,6 +10,7 @@
 
 #include "actions/add.h"
 #include "actions/check.h"
+#include "actions/dismiss.h"
 
 typedef int (*action_func_t)(int argc, char **argv);
 
@@ -19,6 +20,7 @@ static const struct {
 } actions[] = {
     {"add", action_add},
     {"check", action_check},
+    {"dismiss", action_dismiss},
 };
 
 static const char help[] =

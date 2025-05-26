@@ -69,7 +69,7 @@ static int check_periodic(int id, const char *title, const char *cron_expression
                 "prev_trigger = $prev_trigger, "
                 "next_trigger = $next_trigger, "
                 "dismissed = $dismissed "
-            "WHERE id = $id;"
+            "WHERE id == $id;"
         ;
         sqlite3_stmt *sql_stmt = NULL;
 

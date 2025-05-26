@@ -25,6 +25,7 @@ todo_sources = [
   'src/xmalloc.c',
   'src/actions/add.c',
   'src/actions/check.c',
+  'src/actions/dismiss.c',
 ]
 
 executable('todo', todo_sources,

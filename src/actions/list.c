@@ -31,8 +31,10 @@ static const char *build_field_list(char *raw_list) {
 
     char *token = strtok(raw_list, ",");
     while (token != NULL) {
+        bool valid = false;
         for (unsigned long i = 0; i < ARRAY_SIZE(allowed_fields); i++) {
-            if (strcmp(token, allowed_fields[i]) == 0) {
+            if (STREQ(token, allowed_fields[i])) {
+                valid = true;
                 result_pos = stpecpy(result_pos, result_end, allowed_fields[i]);
                 result_pos = stpecpy(result_pos, result_end, ",");
                 if (result_pos == NULL) {
@@ -40,6 +42,10 @@ static const char *build_field_list(char *raw_list) {
                     return NULL;
                 }
             }
+        }
+        if (!valid) {
+            LOG("invalid field name: %s", token);
+            return NULL;
         }
 
         token = strtok(NULL, ",");
@@ -95,14 +101,14 @@ int action_list(int argc, char **argv) {
     argv = &argv[optind];
 
     const char *sql_field_list = NULL;
-    if (argc < 2) {
+    if (argc < 1) {
         sql_field_list = "id,type,title";
-    } else if (argc == 2) {
-        sql_field_list = build_field_list(argv[1]);
+    } else if (argc == 1) {
+        sql_field_list = build_field_list(argv[0]);
         if (sql_field_list == NULL) {
             goto err;
         }
-    } else if (argc > 2) {
+    } else if (argc > 1) {
         LOG("too many arguments\n");
         print_help_and_exit(help, stderr, 1);
     }

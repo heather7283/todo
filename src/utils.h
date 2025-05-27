@@ -15,12 +15,13 @@
 #define STR(s) #s
 #define STR2(s) STR(s)
 
+#define ANSI_RESET "\033[0m"
 #define ANSI_BOLD "\033[1m"
 #define ANSI_DIM "\033[2m"
+#define ANSI_BLINK "\033[5m"
 #define ANSI_RED "\033[31m"
 #define ANSI_GREEN "\033[32m"
 #define ANSI_YELLOW "\033[33m"
-#define ANSI_RESET "\033[0m"
 
 /* Returns value of envvar name or fallback if envvar name is unset */
 const char *getenv_or(const char *name, const char *fallback);

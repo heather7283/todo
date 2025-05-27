@@ -32,8 +32,18 @@ static const char help[] =
     "    todo [-d DB_PATH] [-h] ACTION ARGS...\n"
     "\n"
     "Actions:\n"
-    "    todo add - create a todo item\n"
-    "    todo check - list brief summary of all todo items\n"
+    "  Add a new task:\n"
+    "    todo add deadline DEADLINE TITLE [BODY]\n"
+    "    todo add periodic CRON_EXPR TITLE [BODY]\n"
+    "    todo add idle TITLE [BODY]\n"
+    "  Show brief summary of active tasks:\n"
+    "    todo check\n"
+    "  Dismiss a periodic task until it fires again:\n"
+    "    todo dismiss ID\n"
+    "  List all tasks (optionally specify fields to print):\n"
+    "    todo list [FIELD1,FIELD2,FIELD3...]\n"
+    "  Delete a task:\n"
+    "    todo delete ID\n"
 ;
 
 int main(int argc, char **argv) {

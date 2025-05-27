@@ -22,6 +22,7 @@ struct todo_item {
     char *title;
     char *body;
     time_t created_at;
+    time_t deleted_at;
     enum todo_item_type type;
     union {
         struct {

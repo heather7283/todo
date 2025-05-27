@@ -19,7 +19,7 @@ static const char create_table_todo_items_stmt[] =
         "title        TEXT    NOT NULL UNIQUE,"
         "body         TEXT,"
         "created_at   INTEGER NOT NULL,"
-        "completed_at INTEGER,"
+        "deleted_at   INTEGER,"
         "type         INTEGER CHECK(type == 1 OR type == 2 OR type == 3),"
         /* only for deadline type */
         "deadline     INTEGER CHECK((deadline IS NOT NULL) == (type == 2)),"

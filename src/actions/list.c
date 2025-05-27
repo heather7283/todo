@@ -10,7 +10,11 @@
 
 static const char help[] =
     "Usage:\n"
-    "    todo list [FIELD1,FIELD2,FIELD3...]\n"
+    "    todo list [-h] [-t TYPE] [FIELD1,FIELD2,FIELD3...]\n"
+    "\n"
+    "Command line arguments:\n"
+    "    -t TYPE  Only list entries of specified type\n"
+    "    -h       Print this message and exit\n"
 ;
 
 #define MAX_FIELD_LIST_LEN 1024

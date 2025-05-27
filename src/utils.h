@@ -15,8 +15,8 @@
 #define STR(s) #s
 #define STR2(s) STR(s)
 
-#define ANSI_DIM "\033[2m"
 #define ANSI_BOLD "\033[1m"
+#define ANSI_DIM "\033[2m"
 #define ANSI_RED "\033[31m"
 #define ANSI_GREEN "\033[32m"
 #define ANSI_YELLOW "\033[33m"

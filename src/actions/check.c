@@ -11,6 +11,11 @@
 #define DEADLINE_THRESH_YELLOW (60 * 60 * 24 * 30) /* a month */
 #define DEADLINE_THRESH_RED (60 * 60 * 24 * 7) /* a week */
 
+#define MINUTE (60)
+#define HOUR (MINUTE * 60)
+#define DAY (HOUR * 24)
+#define WEEK (DAY * 7)
+
 static int check_idle(const struct todo_item *item) {
     int64_t id = item->id;
     const char *title = item->title;
@@ -23,22 +28,27 @@ static int check_idle(const struct todo_item *item) {
 static int check_deadline(const struct todo_item *item) {
     int64_t id = item->id;
     const char *title = item->title;
+    time_t created_at = item->created_at;
     time_t deadline = item->as.deadline.deadline;
 
     time_t now = time(NULL); /* TODO: call time() once */
     time_t diff = deadline - now;
 
-    char date_str[64];
-    struct tm *deadline_tm = localtime(&deadline);
-    strftime(date_str, sizeof(date_str), "%a %d %b %Y %H:%M:%S", deadline_tm);
+    const char *date_str = format_seconds(deadline);
 
+    /* Green if below 50% until deadline OR more than 30 days to deadline
+     * Yellow if from 50% to 75% until deadline AND less than 30 days
+     * Red if above 75% OR less than a week
+     * Bold red if deadline has passed
+     */
+    float progress = ((float)now - (float)created_at) / ((float)deadline - (float)created_at);
     if (diff < 0) { /* deadline has passed, I'm cooked */
-        printf(ANSI_BOLD ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
+        printf(ANSI_BOLD "\033[5m" ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
-    } else if (diff < DEADLINE_THRESH_RED) {
+    } else if (progress > 0.75 || diff <= WEEK) {
         printf(ANSI_RED "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
-    } else if (diff < DEADLINE_THRESH_YELLOW) {
+    } else if (progress > 0.5 && diff < (DAY * 31)) {
         printf(ANSI_YELLOW "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     } else {
@@ -112,12 +122,8 @@ static int check_periodic(const struct todo_item *item) {
         time_t now = time(NULL); /* TODO: call time() once */
         time_t diff = next_trigger - now;
 
-        char next_str[64];
-        struct tm *next_tm = localtime(&next_trigger);
-        strftime(next_str, sizeof(next_str), "%a %d %b %Y %H:%M:%S", next_tm);
-
         printf("%4li: \"%s\" %s (next %s, in %s)\n",
-               id, title, cron_expression, next_str, format_timediff(diff));
+               id, title, cron_expression, format_seconds(next_trigger), format_timediff(diff));
     }
 
     return 0;

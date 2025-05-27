@@ -143,6 +143,8 @@ static int compare_items(const void *a, const void *b) {
         return first->as.deadline.deadline < second->as.deadline.deadline;
     case PERIODIC:
         return first->as.periodic.next_trigger < second->as.periodic.next_trigger;
+    default:
+        return 0; /* unreachable, make compiler shut up */
     }
 }
 

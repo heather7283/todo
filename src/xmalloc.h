@@ -13,5 +13,8 @@ void *xrealloc(void *ptr, size_t size);
 /* strdup, but aborts on alloc fail and returns NULL when called with NULL */
 char *xstrdup(const char *s);
 
+/* sprintf but prints to malloced string and aborts on malloc fail */
+int xasprintf(char **strp, const char *fmt, ...);
+
 #endif /* #ifndef SRC_XMALLOC_H */
 

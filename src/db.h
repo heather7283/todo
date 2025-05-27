@@ -15,6 +15,7 @@ enum todo_item_type {
     IDLE = 1,
     DEADLINE = 2,
     PERIODIC = 3,
+    TODO_ITEM_TYPE_ANY,
 };
 
 struct todo_item {

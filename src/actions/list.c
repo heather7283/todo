@@ -5,6 +5,8 @@
 #include "actions/list.h"
 #include "db.h"
 #include "utils.h"
+#include "xmalloc.h"
+#include "getopt.h"
 
 static const char help[] =
     "Usage:\n"
@@ -46,23 +48,54 @@ static const char *build_field_list(char *raw_list) {
     return result_list;
 }
 
-static int print_row(void *data, int argc, char **argv, char **column_names) {
-    for (int i = 0; i < argc - 1; i++) {
-        printf("%s\t", argv[i] ? argv[i] : "");
-    }
-    printf("%s\n", argv[argc - 1] ? argv[argc - 1] : "");
-    return 0;
-}
-
 int action_list(int argc, char **argv) {
     int ret;
+    enum todo_item_type type = TODO_ITEM_TYPE_ANY;
 
-    const char *sql2 = NULL;
+    optreset = 1;
+    optind = 0;
+    int opt;
+    while ((opt = getopt(argc, argv, ":ht:")) != -1) {
+        switch (opt) {
+        case 't':
+            /* TODO: move to helper function? */
+            if (STREQ(optarg, "deadline")) {
+                type = DEADLINE;
+            } else if (STREQ(optarg, "periodic")) {
+                type = PERIODIC;
+            } else if (STREQ(optarg, "idle")) {
+                type = IDLE;
+            } else {
+                LOG("invalid entry type: %s\n", optarg);
+                print_help_and_exit(help, stderr, 1);
+            }
+            break;
+        case 'h':
+            print_help_and_exit(help, stdout, 0);
+            break;
+        case '?':
+            LOG("unknown option: %c\n", optopt);
+            print_help_and_exit(help, stderr, 1);
+            break;
+        case ':':
+            LOG("missing arg for %c\n", optopt);
+            print_help_and_exit(help, stderr, 1);
+            break;
+        default:
+            LOG("error while parsing command line options\n");
+            print_help_and_exit(help, stderr, 1);
+            break;
+        }
+    }
+    argc = argc - optind;
+    argv = &argv[optind];
+
+    const char *sql_field_list = NULL;
     if (argc < 2) {
-        sql2 = "id,type,title";
+        sql_field_list = "id,type,title";
     } else if (argc == 2) {
-        sql2 = build_field_list(argv[1]);
-        if (sql2 == NULL) {
+        sql_field_list = build_field_list(argv[1]);
+        if (sql_field_list == NULL) {
             goto err;
         }
     } else if (argc > 2) {
@@ -70,16 +103,47 @@ int action_list(int argc, char **argv) {
         print_help_and_exit(help, stderr, 1);
     }
 
-    const char sql1[] = "SELECT ";
-    const char sql3[] = " FROM todo_items WHERE deleted_at IS NULL;";
+    /* I hate this. I hate this so much */
+    const char sql_select[] = "SELECT ";
+    const char sql_from[] = " FROM todo_items";
+    const char sql_where[] = " WHERE";
+    const char sql_and[] = " AND";
+    const char sql_deleted[] = " deleted_at IS NULL";
+    const char sql_type[] = " type == $type";
+    const char sql_semicolon[] = ";";
 
-    char sql[sizeof(sql1) + sizeof(sql3) + MAX_FIELD_LIST_LEN];
-    snprintf(sql, sizeof(sql), "%s%s%s", sql1, sql2, sql3);
+    char *sql = NULL;
+    sqlite3_stmt *sql_stmt = NULL;
+    if (type == TODO_ITEM_TYPE_ANY) {
+        xasprintf(&sql, "%s%s%s%s%s%s", sql_select, sql_field_list, sql_from, sql_where,
+                  sql_deleted, sql_semicolon);
+    } else {
+        xasprintf(&sql, "%s%s%s%s%s%s%s%s", sql_select, sql_field_list, sql_from, sql_where,
+                  sql_deleted, sql_and, sql_type, sql_semicolon);
+    }
 
-    ret = sqlite3_exec(db, sql, print_row, NULL, NULL);
+    ret = sqlite3_prepare_v2(db, sql, -1, &sql_stmt, NULL);
     if (ret != SQLITE_OK) {
-        SQL_ELOG("failed to list entries");
+        SQL_ELOG("failed to prepare statement");
         return 1;
+    }
+
+    STMT_BIND(sql_stmt, int64, "$type", type);
+
+    while ((ret = sqlite3_step(sql_stmt)) == SQLITE_ROW) {
+        int n_cols = sqlite3_column_count(sql_stmt);
+        const char *val = NULL;
+
+        for (int i = 0; i < n_cols - 1; i++) {
+            val = (char *)sqlite3_column_text(sql_stmt, i);
+            printf("%s\t", val ? val : "");
+        }
+        val = (char *)sqlite3_column_text(sql_stmt, n_cols - 1);
+        printf("%s\n", val ? val : "");
+    }
+    if (ret != SQLITE_DONE) {
+        SQL_ELOG("failed to list entries");
+        goto err;
     }
 
     return 0;

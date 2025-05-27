@@ -130,13 +130,13 @@ const char *format_timediff(time_t diff) {
     }
 
     if (d != 0) {
-        s += snprintf(s, sizeof(string) - (s - string), "%id ", d);
+        s += snprintf(s, sizeof(string) - (s - string), "%id", d);
     }
     if (h != 0) {
-        s += snprintf(s, sizeof(string) - (s - string), "%ih ", h);
+        s += snprintf(s, sizeof(string) - (s - string), "%s%ih", d != 0 ? " " : "", h);
     }
     if (m != 0) {
-        s += snprintf(s, sizeof(string) - (s - string), "%im", m);
+        s += snprintf(s, sizeof(string) - (s - string), "%s%im", h != 0 ? " " : "", m);
     }
 
     return string;

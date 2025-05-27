@@ -36,19 +36,18 @@ static int check_deadline(const struct todo_item *item) {
 
     const char *date_str = format_seconds(deadline);
 
-    /* Green if below 50% until deadline OR more than 30 days to deadline
-     * Yellow if from 50% to 75% until deadline AND less than 30 days
-     * Red if above 75% OR less than a week
-     * Bold red if deadline has passed
-     */
+    /* TODO: make the thresholds configurable? */
     float progress = ((float)now - (float)created_at) / ((float)deadline - (float)created_at);
     if (diff < 0) { /* deadline has passed, I'm cooked */
-        printf(ANSI_BOLD "\033[5m" ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
+        printf(ANSI_BOLD ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
-    } else if (progress > 0.75 || diff <= WEEK) {
+    } else if (progress >= 0.9 || diff <= (3 * DAY)) {
+        printf(ANSI_BOLD ANSI_RED ANSI_BLINK "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               id, title, date_str, format_timediff(diff));
+    } else if (progress >= 0.75 || diff <= WEEK) {
         printf(ANSI_RED "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
-    } else if (progress > 0.5 && diff < (DAY * 31)) {
+    } else if (progress >= 0.5 && diff < (DAY * 31)) {
         printf(ANSI_YELLOW "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
                id, title, date_str, format_timediff(diff));
     } else {

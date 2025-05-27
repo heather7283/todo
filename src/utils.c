@@ -142,3 +142,35 @@ const char *format_timediff(time_t diff) {
     return string;
 }
 
+ssize_t strtcpy(char *restrict dst, const char *restrict src, size_t dsize) {
+    bool trunc;
+    size_t dlen, slen;
+
+    if (dsize == 0) {
+        errno = ENOBUFS;
+        return -1;
+    }
+
+    slen = strnlen(src, dsize);
+    trunc = (slen == dsize);
+    dlen = slen - trunc;
+
+    stpcpy((char *)memcpy(dst, src, dlen) + dlen, "");
+    if (trunc) {
+        errno = E2BIG;
+        return -1;
+    }
+    return slen;
+}
+
+char *stpecpy(char *dst, char *end, const char *restrict src) {
+    ssize_t dlen;
+
+    if (dst == NULL) {
+        return NULL;
+    }
+
+    dlen = strtcpy(dst, src, end - dst);
+    return (dlen == -1) ? NULL : dst + dlen;
+}
+

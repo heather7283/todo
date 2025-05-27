@@ -44,5 +44,10 @@ const char *format_seconds(time_t seconds);
 /* Formats number of seconds into days, hours, minutes */
 const char *format_timediff(time_t diff);
 
+/* see string_copying(7) */
+ssize_t strtcpy(char *restrict dst, const char *restrict src, size_t dsize);
+/* see string_copying(7) */
+char *stpecpy(char* dst, char *end, const char *restrict src);
+
 #endif /* #ifndef SRC_UTILS_H */
 

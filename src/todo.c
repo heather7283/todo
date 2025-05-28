@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     const char *db_path = NULL;
 
     int opt;
-    while ((opt = getopt(argc, argv, ":d:h")) != -1) {
+    while ((opt = getopt(argc, argv, "d:h")) != -1) {
         switch (opt) {
         case 'd':
             db_path = optarg;
@@ -59,18 +59,8 @@ int main(int argc, char **argv) {
         case 'h':
             print_help_and_exit(help, stdout, 0);
             break;
-        case '?':
-            LOG("unknown option: %c\n", optopt);
-            print_help_and_exit(help, stderr, 1);
-            break;
-        case ':':
-            LOG("missing arg for %c\n", optopt);
-            print_help_and_exit(help, stderr, 1);
-            break;
         default:
-            LOG("error while parsing command line options\n");
-            print_help_and_exit(help, stderr, 1);
-            break;
+            return 1;
         }
     }
     argc = argc - optind;

@@ -65,7 +65,7 @@ int action_list(int argc, char **argv) {
     optreset = 1;
     optind = 0;
     int opt;
-    while ((opt = getopt(argc, argv, ":ht:")) != -1) {
+    while ((opt = getopt(argc, argv, "ht:")) != -1) {
         switch (opt) {
         case 't':
             /* TODO: move to helper function? */
@@ -83,18 +83,8 @@ int action_list(int argc, char **argv) {
         case 'h':
             print_help_and_exit(help, stdout, 0);
             break;
-        case '?':
-            LOG("unknown option: %c\n", optopt);
-            print_help_and_exit(help, stderr, 1);
-            break;
-        case ':':
-            LOG("missing arg for %c\n", optopt);
-            print_help_and_exit(help, stderr, 1);
-            break;
         default:
-            LOG("error while parsing command line options\n");
-            print_help_and_exit(help, stderr, 1);
-            break;
+            return 1;
         }
     }
     argc = argc - optind;

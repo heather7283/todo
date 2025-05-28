@@ -37,23 +37,26 @@ static int check_deadline(const struct todo_item *item, int alignment) {
 
     const char *date_str = format_seconds(deadline);
 
-    /* TODO: make the thresholds configurable? */
-    float progress = ((float)now - (float)created_at) / ((float)deadline - (float)created_at);
+    const char *color_str = NULL;
     if (diff < 0) { /* deadline has passed, I'm cooked */
-        printf(ANSI_BOLD ANSI_RED "%*li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
-               alignment, id, title, date_str, format_timediff(diff));
-    } else if (progress >= 0.9 || diff <= (3 * DAY)) {
-        printf(ANSI_BOLD ANSI_RED ANSI_BLINK "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               alignment, id, title, date_str, format_timediff(diff));
-    } else if (progress >= 0.75 || diff <= WEEK) {
-        printf(ANSI_RED "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               alignment, id, title, date_str, format_timediff(diff));
-    } else if (progress >= 0.5 && diff < (DAY * 31)) {
-        printf(ANSI_YELLOW "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               alignment, id, title, date_str, format_timediff(diff));
+        color_str = ANSI_BOLD ANSI_RED;
+        printf("%s%*li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
+               color_str, alignment, id, title, date_str, format_timediff(diff));
     } else {
-        printf(ANSI_GREEN "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               alignment, id, title, date_str, format_timediff(diff));
+        /* TODO: make the thresholds configurable? */
+        float progress = ((float)now - (float)created_at) / ((float)deadline - (float)created_at);
+        if (progress >= 0.9 || diff <= (3 * DAY)) {
+            color_str = ANSI_BOLD ANSI_RED ANSI_BLINK;
+        } else if (progress >= 0.75 || diff <= WEEK) {
+            color_str = ANSI_RED;
+        } else if (progress >= 0.5 && diff < (DAY * 31)) {
+            color_str = ANSI_YELLOW;
+        } else {
+            color_str = ANSI_GREEN;
+        }
+
+        printf("%s%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               color_str, alignment, id, title, date_str, format_timediff(diff));
     }
 
     return 0;

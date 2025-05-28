@@ -36,7 +36,7 @@ const char *get_tmpfile_path(void);
 bool str_to_int64(const char *str, int64_t *res);
 
 /* Print message help to stream and exit with code rc */
-void print_help_and_exit(const char *help, FILE *stream, int rc);
+[[noreturn]] void print_help_and_exit(const char *help, FILE *stream, int rc);
 
 /* Formats unix seconds into human readable time string */
 const char *format_seconds(time_t seconds);

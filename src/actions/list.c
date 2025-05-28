@@ -76,13 +76,12 @@ int action_list(int argc, char **argv) {
             } else if (STREQ(optarg, "idle")) {
                 type = IDLE;
             } else {
-                LOG("invalid entry type: %s\n", optarg);
-                print_help_and_exit(help, stderr, 1);
+                LOG("invalid entry type: %s", optarg);
+                return 1;
             }
             break;
         case 'h':
             print_help_and_exit(help, stdout, 0);
-            break;
         default:
             return 1;
         }
@@ -99,8 +98,8 @@ int action_list(int argc, char **argv) {
             goto err;
         }
     } else if (argc > 1) {
-        LOG("too many arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("too many arguments");
+        return 1;
     }
 
     /* I hate this. I hate this so much */

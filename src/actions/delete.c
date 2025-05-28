@@ -24,7 +24,6 @@ int action_delete(int argc, char **argv) {
         switch (opt) {
         case 'h':
             print_help_and_exit(help, stdout, 0);
-            break;
         case 'd':
             soft_delete = false;
             break;
@@ -36,8 +35,8 @@ int action_delete(int argc, char **argv) {
     argv = &argv[optind];
 
     if (argc < 1) {
-        LOG("id is not specified\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("id is not specified");
+        return 1;
     }
 
     int64_t id;

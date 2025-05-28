@@ -24,8 +24,8 @@ static int add_periodic(int argc, char **argv) {
     const char *body_str = NULL;
 
     if (argc < 2) {
-        LOG("not enough arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("not enough arguments");
+        return 1;
     } else if (argc == 2) {
         cron_expr_str = argv[0];
         title_str = argv[1];
@@ -34,8 +34,8 @@ static int add_periodic(int argc, char **argv) {
         title_str = argv[1];
         body_str = argv[2];
     } else {
-        LOG("too many arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("too many arguments");
+        return 1;
     }
 
     cron_expr cron_expr;
@@ -98,8 +98,8 @@ static int add_deadline(int argc, char **argv) {
     const char *body_str = NULL;
 
     if (argc < 2) {
-        LOG("not enough arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("not enough arguments");
+        return 1;
     } else if (argc == 2) {
         deadline_str = argv[0];
         title_str = argv[1];
@@ -108,8 +108,8 @@ static int add_deadline(int argc, char **argv) {
         title_str = argv[1];
         body_str = argv[2];
     } else {
-        LOG("too many arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("too many arguments");
+        return 1;
     }
 
     int64_t deadline;
@@ -158,16 +158,16 @@ static int add_idle(int argc, char **argv) {
     const char *body_str = NULL;
 
     if (argc < 1) {
-        LOG("not enough arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("not enough arguments");
+        return 1;
     } else if (argc == 1) {
         title_str = argv[0];
     } else if (argc == 2) {
         title_str = argv[0];
         body_str = argv[1];
     } else {
-        LOG("too many arguments\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("too many arguments");
+        return 1;
     }
 
     const char sql[] =
@@ -214,7 +214,6 @@ int action_add(int argc, char **argv) {
         switch (opt) {
         case 'h':
             print_help_and_exit(help, stdout, 0);
-            break;
         default:
             return 1;
         }
@@ -223,8 +222,8 @@ int action_add(int argc, char **argv) {
     argv = &argv[optind];
 
     if (argc < 1) {
-        LOG("item type is not specified\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("item type is not specified");
+        return 1;
     }
 
     if (STREQ(argv[0], "idle")) {
@@ -234,8 +233,8 @@ int action_add(int argc, char **argv) {
     } else if (STREQ(argv[0], "periodic")) {
         rc = add_periodic(argc - 1, argv + 1);
     } else {
-        LOG("invalid item type: %s\n", argv[0]);
-        print_help_and_exit(help, stderr, 1);
+        LOG("invalid item type: %s", argv[0]);
+        return 1;
     }
 
     return rc;

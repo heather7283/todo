@@ -66,8 +66,8 @@ int main(int argc, char **argv) {
     argc = argc - optind;
     argv = &argv[optind];
     if (argc < 1) {
-        LOG("no action provided\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("no action provided");
+        return 1;
     }
 
     action_func_t action = NULL;
@@ -77,8 +77,8 @@ int main(int argc, char **argv) {
         }
     }
     if (action == NULL) {
-        LOG("unknown action: %s\n", argv[0]);
-        print_help_and_exit(help, stderr, 1);
+        LOG("unknown action: %s", argv[0]);
+        return 1;
     }
 
     if (db_init(db_path) < 0) {

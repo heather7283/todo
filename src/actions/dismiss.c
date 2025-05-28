@@ -11,8 +11,8 @@ static const char help[] =
 
 int action_dismiss(int argc, char **argv) {
     if (argc < 2) {
-        LOG("id is not specified\n");
-        print_help_and_exit(help, stderr, 1);
+        LOG("id is not specified");
+        return 1;
     }
 
     int64_t id;

@@ -26,6 +26,11 @@ todo add idle 'Find a gf'
 Intended usage is to call `todo check` in your shell startup file
 to get reminded of all todo items every time new shell is launched.
 
+## TODOs (ironic)
+[ ] More convenient entry addition (maybe invoke an editor like git commit)
+[ ] Trim output width to terminal width
+[ ] Shell completions
+
 ## References:
 - https://github.com/rexim/tore
 - https://github.com/exander77/supertinycron

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 
 #include "actions/check.h"
 #include "db.h"
@@ -16,16 +17,16 @@
 #define DAY (HOUR * 24)
 #define WEEK (DAY * 7)
 
-static int check_idle(const struct todo_item *item) {
+static int check_idle(const struct todo_item *item, int alignment) {
     int64_t id = item->id;
     const char *title = item->title;
 
-    printf(ANSI_DIM "%4li: \"%s\"" ANSI_RESET "\n", id, title);
+    printf(ANSI_DIM "%*li: \"%s\"" ANSI_RESET "\n", alignment, id, title);
 
     return 0;
 }
 
-static int check_deadline(const struct todo_item *item) {
+static int check_deadline(const struct todo_item *item, int alignment) {
     int64_t id = item->id;
     const char *title = item->title;
     time_t created_at = item->created_at;
@@ -39,26 +40,26 @@ static int check_deadline(const struct todo_item *item) {
     /* TODO: make the thresholds configurable? */
     float progress = ((float)now - (float)created_at) / ((float)deadline - (float)created_at);
     if (diff < 0) { /* deadline has passed, I'm cooked */
-        printf(ANSI_BOLD ANSI_RED "%4li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
-               id, title, date_str, format_timediff(diff));
+        printf(ANSI_BOLD ANSI_RED "%*li: \"%s\" due %s (%s ago)" ANSI_RESET "\n",
+               alignment, id, title, date_str, format_timediff(diff));
     } else if (progress >= 0.9 || diff <= (3 * DAY)) {
-        printf(ANSI_BOLD ANSI_RED ANSI_BLINK "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               id, title, date_str, format_timediff(diff));
+        printf(ANSI_BOLD ANSI_RED ANSI_BLINK "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               alignment, id, title, date_str, format_timediff(diff));
     } else if (progress >= 0.75 || diff <= WEEK) {
-        printf(ANSI_RED "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               id, title, date_str, format_timediff(diff));
+        printf(ANSI_RED "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               alignment, id, title, date_str, format_timediff(diff));
     } else if (progress >= 0.5 && diff < (DAY * 31)) {
-        printf(ANSI_YELLOW "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               id, title, date_str, format_timediff(diff));
+        printf(ANSI_YELLOW "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               alignment, id, title, date_str, format_timediff(diff));
     } else {
-        printf(ANSI_GREEN "%4li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
-               id, title, date_str, format_timediff(diff));
+        printf(ANSI_GREEN "%*li: \"%s\" due %s (in %s)" ANSI_RESET "\n",
+               alignment, id, title, date_str, format_timediff(diff));
     }
 
     return 0;
 }
 
-static int check_periodic(const struct todo_item *item) {
+static int check_periodic(const struct todo_item *item, int alignment) {
     /* Ok this one is tricky.
      *
      * If current time is greater than next_trigger, I should display the entry,
@@ -121,8 +122,9 @@ static int check_periodic(const struct todo_item *item) {
         time_t now = time(NULL); /* TODO: call time() once */
         time_t diff = next_trigger - now;
 
-        printf("%4li: \"%s\" %s (next %s, in %s)\n",
-               id, title, cron_expression, format_seconds(next_trigger), format_timediff(diff));
+        printf("%*li: \"%s\" %s (next %s, in %s)\n",
+               alignment, id, title, cron_expression,
+               format_seconds(next_trigger), format_timediff(diff));
     }
 
     return 0;
@@ -146,6 +148,19 @@ static int compare_items(const void *a, const void *b) {
     default:
         return 0; /* unreachable, make compiler shut up */
     }
+}
+
+static int count_digits(uint64_t number) {
+    if (number == 0) {
+        return 1;
+    }
+
+    int count = 0;
+    while (number != 0) {
+        number /= 10;
+        count++;
+    }
+    return count;
 }
 
 int action_check(int argc, char **argv) {
@@ -183,6 +198,7 @@ int action_check(int argc, char **argv) {
         goto err;
     }
 
+    int max_digits = 0;
     int i = 0;
     while ((ret = sqlite3_step(sql_stmt)) == SQLITE_ROW) {
         items[i].id = sqlite3_column_int64(sql_stmt, 0);
@@ -211,6 +227,8 @@ int action_check(int argc, char **argv) {
         }
         }
 
+        int d = count_digits(items[i].id);
+        max_digits = (d > max_digits) ? d : max_digits;
         i += 1;
     }
     if (ret != SQLITE_DONE) {
@@ -223,15 +241,15 @@ int action_check(int argc, char **argv) {
     for (int i = 0; i < items_count; i++) {
         switch (items[i].type) {
         case IDLE: {
-            check_idle(&items[i]);
+            check_idle(&items[i], max_digits);
             break;
         }
         case DEADLINE: {
-            check_deadline(&items[i]);
+            check_deadline(&items[i], max_digits);
             break;
         }
         case PERIODIC: {
-            check_periodic(&items[i]);
+            check_periodic(&items[i], max_digits);
             free(items[i].as.periodic.cron_expr);
             break;
         }

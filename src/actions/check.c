@@ -173,7 +173,7 @@ int action_check(int argc, char **argv) {
     struct todo_item *items = NULL;
 
     /* TODO: remove the count query and use linked list for this (or sort on sql side) */
-    const char sql_count[] = "SELECT COUNT(*) FROM todo_items";
+    const char sql_count[] = "SELECT COUNT(*) FROM todo_items WHERE deleted_at IS NULL;";
 
     ret = sqlite3_prepare_v2(db, sql_count, -1, &sql_count_stmt, NULL);
     if (ret != SQLITE_OK) {
@@ -193,7 +193,7 @@ int action_check(int argc, char **argv) {
     const char sql[] =
         /*       0     1          2    3        4         5            6            7         8 */
         "SELECT id,title,created_at,type,deadline,cron_expr,prev_trigger,next_trigger,dismissed "
-        "FROM todo_items;";
+        "FROM todo_items WHERE deleted_at IS NULL;";
 
     ret = sqlite3_prepare_v2(db, sql, -1, &sql_stmt, NULL);
     if (ret != SQLITE_OK) {

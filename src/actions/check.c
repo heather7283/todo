@@ -9,15 +9,12 @@
 #include "xmalloc.h"
 #include "ccronexpr.h"
 
-#define DEADLINE_THRESH_YELLOW (60 * 60 * 24 * 30) /* a month */
-#define DEADLINE_THRESH_RED (60 * 60 * 24 * 7) /* a week */
-
 #define MINUTE (60)
 #define HOUR (MINUTE * 60)
 #define DAY (HOUR * 24)
 #define WEEK (DAY * 7)
 
-static int check_idle(const struct todo_item *item, int alignment) {
+static int check_idle(const struct todo_item *item, time_t now, int alignment) {
     int64_t id = item->id;
     const char *title = item->title;
 
@@ -26,13 +23,12 @@ static int check_idle(const struct todo_item *item, int alignment) {
     return 0;
 }
 
-static int check_deadline(const struct todo_item *item, int alignment) {
+static int check_deadline(const struct todo_item *item, time_t now, int alignment) {
     int64_t id = item->id;
     const char *title = item->title;
     time_t created_at = item->created_at;
     time_t deadline = item->as.deadline.deadline;
 
-    time_t now = time(NULL); /* TODO: call time() once */
     time_t diff = deadline - now;
 
     const char *date_str = format_seconds(deadline);
@@ -62,7 +58,7 @@ static int check_deadline(const struct todo_item *item, int alignment) {
     return 0;
 }
 
-static int check_periodic(const struct todo_item *item, int alignment) {
+static int check_periodic(const struct todo_item *item, time_t now, int alignment) {
     /* Ok this one is tricky.
      *
      * If current time is greater than next_trigger, I should display the entry,
@@ -75,8 +71,6 @@ static int check_periodic(const struct todo_item *item, int alignment) {
     bool dismissed = item->as.periodic.dismissed;
     time_t prev_trigger = item->as.periodic.prev_trigger;
     time_t next_trigger = item->as.periodic.next_trigger;
-
-    time_t now = time(NULL);
 
     if (now > next_trigger) {
         const char *ccron_error = NULL;
@@ -122,7 +116,6 @@ static int check_periodic(const struct todo_item *item, int alignment) {
     }
 
     if (!dismissed) {
-        time_t now = time(NULL); /* TODO: call time() once */
         time_t diff = next_trigger - now;
 
         printf("%*li: \"%s\" %s (next %s, in %s)\n",
@@ -172,7 +165,6 @@ int action_check(int argc, char **argv) {
     int64_t items_count;
     struct todo_item *items = NULL;
 
-    /* TODO: remove the count query and use linked list for this (or sort on sql side) */
     const char sql_count[] = "SELECT COUNT(*) FROM todo_items WHERE deleted_at IS NULL;";
 
     ret = sqlite3_prepare_v2(db, sql_count, -1, &sql_count_stmt, NULL);
@@ -241,18 +233,19 @@ int action_check(int argc, char **argv) {
 
     qsort(items, items_count, sizeof(items[0]), compare_items);
 
+    time_t now = time(NULL);
     for (int i = 0; i < items_count; i++) {
         switch (items[i].type) {
         case IDLE: {
-            check_idle(&items[i], max_digits);
+            check_idle(&items[i], now, max_digits);
             break;
         }
         case DEADLINE: {
-            check_deadline(&items[i], max_digits);
+            check_deadline(&items[i], now, max_digits);
             break;
         }
         case PERIODIC: {
-            check_periodic(&items[i], max_digits);
+            check_periodic(&items[i], now, max_digits);
             free(items[i].as.periodic.cron_expr);
             break;
         }

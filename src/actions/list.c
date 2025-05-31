@@ -14,6 +14,7 @@ static const char help[] =
     "\n"
     "Command line arguments:\n"
     "    -t TYPE  Only list entries of specified type\n"
+    "    -d       Also list soft-deleted items\n"
     "    -h       Print this message and exit\n"
 ;
 
@@ -61,11 +62,12 @@ static const char *build_field_list(char *raw_list) {
 int action_list(int argc, char **argv) {
     int ret;
     enum todo_item_type type = TODO_ITEM_TYPE_ANY;
+    bool list_deleted = false;
 
     optreset = 1;
     optind = 0;
     int opt;
-    while ((opt = getopt(argc, argv, "ht:")) != -1) {
+    while ((opt = getopt(argc, argv, "hdt:")) != -1) {
         switch (opt) {
         case 't':
             /* TODO: move to helper function? */
@@ -79,6 +81,9 @@ int action_list(int argc, char **argv) {
                 LOG("invalid entry type: %s", optarg);
                 return 1;
             }
+            break;
+        case 'd':
+            list_deleted = true;
             break;
         case 'h':
             print_help_and_exit(help, stdout, 0);
@@ -107,18 +112,24 @@ int action_list(int argc, char **argv) {
     const char sql_from[] = " FROM todo_items";
     const char sql_where[] = " WHERE";
     const char sql_and[] = " AND";
-    const char sql_deleted[] = " deleted_at IS NULL";
+    const char sql_no_deleted[] = " deleted_at IS NULL";
     const char sql_type[] = " type == $type";
     const char sql_semicolon[] = ";";
 
     char *sql = NULL;
     sqlite3_stmt *sql_stmt = NULL;
-    if (type == TODO_ITEM_TYPE_ANY) {
-        xasprintf(&sql, "%s%s%s%s%s%s", sql_select, sql_field_list, sql_from, sql_where,
-                  sql_deleted, sql_semicolon);
-    } else {
-        xasprintf(&sql, "%s%s%s%s%s%s%s%s", sql_select, sql_field_list, sql_from, sql_where,
-                  sql_deleted, sql_and, sql_type, sql_semicolon);
+    /* TODO: find a better way to do this */
+    if (type == TODO_ITEM_TYPE_ANY && !list_deleted) {
+        xasprintf(&sql, "%s%s%s%s%s%s", sql_select, sql_field_list,
+                  sql_from, sql_where, sql_no_deleted, sql_semicolon);
+    } else if (type == TODO_ITEM_TYPE_ANY && list_deleted) {
+        xasprintf(&sql, "%s%s%s%s", sql_select, sql_field_list, sql_from, sql_semicolon);
+    } else if (type != TODO_ITEM_TYPE_ANY && !list_deleted) {
+        xasprintf(&sql, "%s%s%s%s%s%s%s%s", sql_select, sql_field_list,
+                  sql_from, sql_where, sql_type, sql_and, sql_no_deleted, sql_semicolon);
+    } else /* type != TODO_ITEM_TYPE_ANY && list_deleted */ {
+        xasprintf(&sql, "%s%s%s%s%s%s", sql_select, sql_field_list,
+                  sql_from, sql_where, sql_type, sql_semicolon);
     }
 
     ret = sqlite3_prepare_v2(db, sql, -1, &sql_stmt, NULL);

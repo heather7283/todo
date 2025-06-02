@@ -16,7 +16,7 @@ struct sqlite3 *db = NULL;
 static const char create_table_todo_items_stmt[] =
     "CREATE TABLE IF NOT EXISTS todo_items ("
         "id           INTEGER PRIMARY KEY,"
-        "title        TEXT    NOT NULL UNIQUE,"
+        "title        TEXT    NOT NULL,"
         "body         TEXT,"
         "created_at   INTEGER NOT NULL,"
         "deleted_at   INTEGER,"

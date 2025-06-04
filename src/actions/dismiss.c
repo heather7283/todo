@@ -6,17 +6,14 @@
 
 static const char help[] =
     "Usage:\n"
-    "    todo dismiss ID\n"
+    "    todo dismiss ID...\n"
 ;
 
 int action_dismiss(int argc, char **argv) {
+    int rc = 0;
+
     if (argc < 2) {
         LOG("id is not specified");
-        return 1;
-    }
-
-    int64_t id;
-    if (!str_to_int64(argv[1], &id)) {
         return 1;
     }
 
@@ -30,20 +27,36 @@ int action_dismiss(int argc, char **argv) {
         return 1;
     }
 
-    STMT_BIND(sql_stmt, int64, "$id", id);
+    char **ids = &argv[1];
+    char *id_str;
+    while ((id_str = *(ids++)) != NULL) {
+        int64_t id;
+        if (!str_to_int64(id_str, &id)) {
+            rc = 1;
+            goto loop_continue;
+        }
 
-    ret = sqlite3_step(sql_stmt);
-    if (ret != SQLITE_DONE) {
-        SQL_ELOG("failed to update db entry");
-        return 1;
-    }
-    if (sqlite3_changes(db) < 1) {
-        LOG("periodic entry with id %li does not exist", id);
-        return 1;
+        STMT_BIND(sql_stmt, int64, "$id", id);
+
+        ret = sqlite3_step(sql_stmt);
+        if (ret != SQLITE_DONE) {
+            SQL_ELOG("failed to update db entry");
+            rc = 1;
+            goto loop_continue;
+        }
+        if (sqlite3_changes(db) < 1) {
+            LOG("periodic entry with id %li does not exist", id);
+            rc = 1;
+            goto loop_continue;
+        }
+
+    loop_continue:
+        sqlite3_clear_bindings(sql_stmt);
+        sqlite3_reset(sql_stmt);
     }
 
     sqlite3_finalize(sql_stmt);
 
-    return 0;
+    return rc;
 }
 

@@ -11,6 +11,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 #define STREQ(a, b) (strcmp((a), (b)) == 0)
+#define STRNEQ(a, b, n) (strncmp((a), (b), (n)) == 0)
 
 #define STR(s) #s
 #define STR2(s) STR(s)

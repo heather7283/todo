@@ -14,19 +14,6 @@
 #include "actions/delete.h"
 #include "actions/list.h"
 
-typedef int (*action_func_t)(int argc, char **argv);
-
-static const struct {
-    const char *const name;
-    const action_func_t action;
-} actions[] = {
-    {"add", action_add},
-    {"check", action_check},
-    {"dismiss", action_dismiss},
-    {"delete", action_delete},
-    {"list", action_list},
-};
-
 static const char help[] =
     "Usage:\n"
     "    todo [-d DB_PATH] [-h] ACTION ARGS...\n"
@@ -45,6 +32,46 @@ static const char help[] =
     "  Delete a task:\n"
     "    todo delete ID\n"
 ;
+
+typedef int (*action_func_t)(int argc, char **argv);
+
+static const struct {
+    const char *const name;
+    const action_func_t action;
+} actions[] = {
+    {"add", action_add},
+    {"check", action_check},
+    {"dismiss", action_dismiss},
+    {"delete", action_delete},
+    {"list", action_list},
+};
+
+static action_func_t match_action(const char *input) {
+    action_func_t match_func = NULL;
+    int matches = 0;
+    const size_t input_len = strlen(input);
+
+    for (unsigned long i = 0; i < ARRAY_SIZE(actions); i++) {
+        const char *action_name = actions[i].name;
+        action_func_t action_func = actions[i].action;
+
+        if (STRNEQ(action_name, input, input_len)) {
+            match_func = action_func;
+            if (++matches > 1) {
+                goto ambiguous;
+            }
+        }
+    }
+
+    if (matches == 0) {
+        LOG("action %s is not found", input);
+    }
+    return match_func;
+
+ambiguous:
+    LOG("action name %s is ambiguous", input);
+    return NULL;
+}
 
 int main(int argc, char **argv) {
     int rc = 0;
@@ -70,14 +97,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    action_func_t action = NULL;
-    for (unsigned long i = 0; i < ARRAY_SIZE(actions); i++) {
-        if (STREQ(argv[0], actions[i].name)) {
-            action = actions[i].action;
-        }
-    }
+    action_func_t action = match_action(argv[0]);
     if (action == NULL) {
-        LOG("unknown action: %s", argv[0]);
         return 1;
     }
 

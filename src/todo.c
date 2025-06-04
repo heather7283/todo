@@ -49,6 +49,9 @@ static const struct {
 static action_func_t match_action(const char *input) {
     action_func_t match_func = NULL;
     int matches = 0;
+    char matches_str[256];
+    char *matches_str_pos = matches_str;
+    char *const matches_str_end = matches_str + ARRAY_SIZE(matches_str);
     const size_t input_len = strlen(input);
 
     for (unsigned long i = 0; i < ARRAY_SIZE(actions); i++) {
@@ -57,20 +60,19 @@ static action_func_t match_action(const char *input) {
 
         if (STRNEQ(action_name, input, input_len)) {
             match_func = action_func;
-            if (++matches > 1) {
-                goto ambiguous;
-            }
+            matches += 1;
+            matches_str_pos = stpecpy(matches_str_pos, matches_str_end, action_name);
+            matches_str_pos = stpecpy(matches_str_pos, matches_str_end, ", ");
         }
     }
 
-    if (matches == 0) {
+    if (matches < 1) {
         LOG("action %s is not found", input);
+    } else if (matches > 1) {
+        matches_str_pos[-2] = '\0'; /* remove trailing ", " */
+        LOG("action name %s is ambiguous between %s", input, matches_str);
     }
     return match_func;
-
-ambiguous:
-    LOG("action name %s is ambiguous", input);
-    return NULL;
 }
 
 int main(int argc, char **argv) {

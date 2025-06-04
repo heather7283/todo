@@ -46,7 +46,9 @@ int action_delete(int argc, char **argv) {
     int ret;
 
     if (soft_delete) {
-        sql = "UPDATE todo_items SET deleted_at = $deleted_at WHERE id == $id;";
+        sql = "UPDATE todo_items "
+              "SET deleted_at = $deleted_at "
+              "WHERE id == $id AND deleted_at IS NULL;";
 
         ret = sqlite3_prepare_v2(db, sql, -1, &sql_stmt, NULL);
         if (ret != SQLITE_OK) {
@@ -86,7 +88,7 @@ int action_delete(int argc, char **argv) {
             goto loop_continue;
         }
         if (sqlite3_changes(db) < 1) {
-            LOG("entry with id %li was not found", id);
+            LOG("entry with id %li does not exist or already deleted", id);
             rc = 1;
             goto loop_continue;
         }

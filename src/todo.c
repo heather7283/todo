@@ -68,10 +68,13 @@ static action_func_t match_action(const char *input) {
 
     if (matches < 1) {
         LOG("action %s is not found", input);
+        return NULL;
     } else if (matches > 1) {
         matches_str_pos[-2] = '\0'; /* remove trailing ", " */
         LOG("action name %s is ambiguous between %s", input, matches_str);
+        return NULL;
     }
+
     return match_func;
 }
 
